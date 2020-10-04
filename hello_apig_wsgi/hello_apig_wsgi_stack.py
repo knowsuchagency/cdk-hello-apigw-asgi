@@ -1,10 +1,7 @@
 from aws_cdk import (
     core,
-    aws_apigateway as apigw,
     aws_lambda_python as lmb_py,
-    aws_ec2 as ec2,
-    aws_efs as efs,
-    aws_lambda as lmb,
+    aws_apigatewayv2 as apigw_v2,
 )
 
 
@@ -14,27 +11,36 @@ class HelloApigWsgiStack(core.Stack):
 
         # The code that defines your stack goes here
 
-        vpc = ec2.Vpc(self, "vpc")
-
-        file_system = efs.FileSystem(self, "filesystem", vpc=vpc)
-
-        access_point = file_system.add_access_point(
-            "access-point", posix_user=efs.PosixUser(uid="0", gid="0")
+        wsgi_function = lmb_py.PythonFunction(
+            self, "wsgi-function", entry="./lambdas/wsgi"
         )
 
-        mount_path = "/mnt/openapi"
+        wsgi_integration = apigw_v2.LambdaProxyIntegration(
+            handler=wsgi_function,
+            payload_format_version=apigw_v2.PayloadFormatVersion.VERSION_1_0,
+        )
 
-        function = lmb_py.PythonFunction(
+        api = apigw_v2.HttpApi(self, "api", default_integration=wsgi_integration)
+
+        asgi_base_path = "/asgi"
+
+        asgi_function = lmb_py.PythonFunction(
             self,
-            "function",
-            entry="./lambdas",
-            vpc=vpc,
-            filesystem=lmb.FileSystem.from_efs_access_point(access_point, mount_path),
-            environment={"mount_path": mount_path},
+            "asgi-function",
+            entry="./lambdas/asgi",
+            environment={"asgi_base_path": asgi_base_path},
         )
 
-        api = apigw.LambdaRestApi(
-            self,
-            "api",
-            handler=function,
+        api.add_routes(
+            path=asgi_base_path,
+            methods=[apigw_v2.HttpMethod.GET],
+            integration=apigw_v2.LambdaProxyIntegration(handler=asgi_function),
         )
+
+        api.add_routes(
+            path="/wsgi",
+            methods=[apigw_v2.HttpMethod.GET],
+            integration=wsgi_integration,
+        )
+
+        core.CfnOutput(self, "url", value=api.url)
