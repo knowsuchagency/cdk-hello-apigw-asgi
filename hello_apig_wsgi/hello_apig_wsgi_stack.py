@@ -22,17 +22,14 @@ class HelloApigWsgiStack(core.Stack):
 
         api = apigw_v2.HttpApi(self, "api", default_integration=wsgi_integration)
 
-        asgi_base_path = "/asgi"
-
         asgi_function = lmb_py.PythonFunction(
             self,
             "asgi-function",
             entry="./lambdas/asgi",
-            environment={"asgi_base_path": asgi_base_path},
         )
 
         api.add_routes(
-            path=asgi_base_path,
+            path="/asgi",
             methods=[apigw_v2.HttpMethod.GET],
             integration=apigw_v2.LambdaProxyIntegration(handler=asgi_function),
         )
