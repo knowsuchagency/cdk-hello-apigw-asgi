@@ -12,5 +12,5 @@ def hello_world():
 
 
 @app.route("/wsgi")
-def asgi():
+def wsgi():
     return "hello, wsgi!"
