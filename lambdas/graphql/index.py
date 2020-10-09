@@ -54,7 +54,7 @@ def update_note(note):
 
     print(f"{params=}")
 
-    Table.update(params)
+    TABLE.update(params)
 
     return note
 
