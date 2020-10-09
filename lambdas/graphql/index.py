@@ -27,6 +27,8 @@ def delete_note(id_):
 
 
 def update_note(note):
+    original = TABLE.get_item(Key={"id": note["id"]})
+
     params = dict(
         TableName=TABLE_NAME,
         ExpressionAttributeValues={},
@@ -53,7 +55,12 @@ def update_note(note):
 
     print(f"{params=}")
 
-    TABLE.update(Key={"id": note["id"]}, **params)
+    TABLE.update(
+        Key={"id": note["id"]},
+        AttributeUpdates={
+            k: v for k, v in note.items() if original[k] != v or k == "id"
+        },
+    )
 
     return note
 
