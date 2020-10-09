@@ -38,7 +38,7 @@ def update_note(note):
 
     prefix = "set "
 
-    for key, value in note["attributes"]:
+    for key, value in note["attributes"].items():
 
         if key == "id":
 
