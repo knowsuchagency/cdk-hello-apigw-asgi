@@ -29,36 +29,10 @@ def delete_note(id_):
 def update_note(note):
     original = TABLE.get_item(Key={"id": note["id"]})
 
-    params = dict(
-        TableName=TABLE_NAME,
-        ExpressionAttributeValues={},
-        ExpressionAttributeNames={},
-        UpdateExpression="",
-        ReturnValues="UPDATED_NEW",
-    )
-
-    prefix = "set "
-
-    for key, value in note.items():
-
-        if key == "id":
-
-            continue
-
-        params["UpdateExpression"] += f"{prefix}#{key} = : {key}"
-
-        params["ExpressionAttributeValues"][f":{key}"] = value
-
-        params["ExpressionAttributeNames"][f"#{key}"] = key
-
-        prefix = ", "
-
-    print(f"{params=}")
-
     TABLE.update(
         Key={"id": note["id"]},
         AttributeUpdates={
-            k: v for k, v in note.items() if original[k] != v or k == "id"
+            k: v for k, v in note.items() if k != "id" and original[k] != v
         },
     )
 
