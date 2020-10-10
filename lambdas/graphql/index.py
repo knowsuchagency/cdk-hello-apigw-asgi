@@ -5,6 +5,7 @@ import boto3
 
 TABLE_NAME = os.environ["NOTES_TABLE"]
 TABLE = boto3.resource("dynamodb").Table(TABLE_NAME)
+
 dynamodb = boto3.client("dynamodb")
 
 
@@ -26,19 +27,6 @@ def delete_note(id_):
     return id_
 
 
-def update_note(note):
-    original = TABLE.get_item(Key={"id": note["id"]})
-
-    TABLE.update(
-        Key={"id": note["id"]},
-        AttributeUpdates={
-            k: v for k, v in note.items() if k != "id" and original[k] != v
-        },
-    )
-
-    return note
-
-
 def handler(event, context):
 
     print(f"{event=}")
@@ -55,7 +43,6 @@ def handler(event, context):
         return list_notes()
     elif field_name == "deleteNote":
         return delete_note(arguments["noteId"])
-    elif field_name == "updateNote":
-        return update_note(arguments["note"])
+
     else:
         return None

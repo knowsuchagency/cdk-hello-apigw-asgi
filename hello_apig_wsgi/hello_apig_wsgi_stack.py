@@ -24,20 +24,16 @@ class HelloApigWsgiStack(core.Stack):
             payload_format_version=apigw_v2.PayloadFormatVersion.VERSION_1_0,
         )
 
-        http_api = apigw_v2.HttpApi(
-            self, "http-api", default_integration=wsgi_integration
-        )
-
         asgi_function = lmb_py.PythonFunction(
             self,
             "asgi-function",
             entry="./lambdas/asgi",
         )
 
-        http_api.add_routes(
-            path="/asgi",
-            methods=[apigw_v2.HttpMethod.GET],
-            integration=apigw_v2.LambdaProxyIntegration(handler=asgi_function),
+        asgi_integration = apigw_v2.LambdaProxyIntegration(handler=asgi_function)
+
+        http_api = apigw_v2.HttpApi(
+            self, "http-api", default_integration=asgi_integration
         )
 
         http_api.add_routes(
@@ -46,7 +42,13 @@ class HelloApigWsgiStack(core.Stack):
             integration=wsgi_integration,
         )
 
-        core.CfnOutput(self, "url", value=http_api.url)
+        http_api.add_routes(
+            path="/wsgi/{proxy+}",
+            methods=[apigw_v2.HttpMethod.GET],
+            integration=wsgi_integration,
+        )
+
+        core.CfnOutput(self, "RestApiUrl", value=http_api.url)
 
         graphql_api = appsync.GraphqlApi(
             self,
@@ -55,9 +57,9 @@ class HelloApigWsgiStack(core.Stack):
             schema=appsync.Schema.from_asset("./graphql/schema.graphql"),
         )
 
-        core.CfnOutput(self, "graphql url", value=graphql_api.graphql_url)
+        core.CfnOutput(self, "GraphQLUrl", value=graphql_api.graphql_url)
 
-        core.CfnOutput(self, "graphql api key", value=graphql_api.api_key)
+        core.CfnOutput(self, "GraphQlApiKey", value=graphql_api.api_key)
 
         graphql_handler = lmb_py.PythonFunction(
             self,
