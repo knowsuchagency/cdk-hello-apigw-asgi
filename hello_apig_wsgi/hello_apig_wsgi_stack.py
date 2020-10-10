@@ -80,8 +80,6 @@ class HelloApigWsgiStack(core.Stack):
 
         data_source.create_resolver(type_name="Mutation", field_name="deleteNote")
 
-        data_source.create_resolver(type_name="Mutation", field_name="updateNote")
-
         dynamo_table = dynamodb.Table(
             self,
             "notes-table",
