@@ -10,7 +10,7 @@ handler = Mangum(app)
 
 @app.route("/")
 def hello():
-    return {"path": request.path}
+    return {"path": request.path, "root": True}
 
 
 @app.route("/asgi")

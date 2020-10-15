@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from aws_cdk import core
-
+from hello_apig_wsgi.hello_apig_wsgi_stack import HelloApigWsgiStack
 from hello_apig_wsgi.pipeline_stack import PipelineStack
 from pydantic import BaseSettings
 
@@ -21,6 +21,9 @@ class Config(BaseSettings):
 config = Config()
 
 app = core.App()
+
+# HelloApigWsgiStack(app, "hello-apig-wsgi")
+
 PipelineStack(
     app,
     "hello-apig-wsgi-pipeline",

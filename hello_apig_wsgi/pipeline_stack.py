@@ -1,7 +1,8 @@
 from aws_cdk import core
 from aws_cdk import aws_codepipeline as codepipeline
-from aws_cdk import aws_codepipeline_actions as cpactions
+from aws_cdk import aws_codepipeline_actions as pipeline_actions
 from aws_cdk import pipelines
+from aws_cdk import aws_codebuild as codebuild
 
 from .hello_apig_wsgi_stack import HelloApigWsgiStack
 
@@ -22,15 +23,16 @@ class PipelineStack(core.Stack):
         super().__init__(scope, id, **kwargs)
 
         source_artifact = codepipeline.Artifact()
+
         cloud_assembly_artifact = codepipeline.Artifact()
 
-        source_action = cpactions.GitHubSourceAction(
+        source_action = pipeline_actions.GitHubSourceAction(
             action_name="GitHub",
             output=source_artifact,
-            oauth_token=core.SecretValue.ssm_secure("/github/token", "1"),
+            oauth_token=core.SecretValue.secrets_manager("github-token"),
             owner=config.gh_username,
             repo=config.gh_repo,
-            trigger=cpactions.GitHubTrigger.POLL,
+            trigger=pipeline_actions.GitHubTrigger.POLL,
         )
 
         synth_action = pipelines.SimpleSynthAction(
@@ -39,6 +41,7 @@ class PipelineStack(core.Stack):
             install_command="npm install -g aws-cdk && pip install -r requirements.txt",
             # build_command="pytest unittests",
             synth_command="cdk synth",
+            environment=codebuild.BuildEnvironment(privileged=True)
         )
 
         pipeline = pipelines.CdkPipeline(
