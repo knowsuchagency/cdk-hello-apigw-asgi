@@ -15,7 +15,15 @@ class WebServiceStage(core.Stage):
 
         service = HelloApigWsgiStack(self, "WebService")
 
-        # self.url_output = service.url_output
+        self.http_api_url_output = service.http_api.url
+
+        self.graphql_url_output = service.graphql_api.graphql_url
+
+        self.graphql_api_key_output = service.graphql_api.api_key
+
+        self.foo = "bar"
+
+        self.bar_output = "foo"
 
 
 class PipelineStack(core.Stack):
@@ -38,24 +46,27 @@ class PipelineStack(core.Stack):
         synth_action = pipelines.SimpleSynthAction(
             source_artifact=source_artifact,
             cloud_assembly_artifact=cloud_assembly_artifact,
-            install_command="npm install -g aws-cdk && pip install -r requirements.txt",
-            # build_command="pytest unittests",
-            synth_command="cdk synth",
-            environment=codebuild.BuildEnvironment(privileged=True)
+            install_commands=[
+                "npm install -g aws-cdk",
+                "pip install -r requirements.txt",
+            ],
+            # test_commands=[],
+            synth_command="cdk synth application",
+            environment=codebuild.BuildEnvironment(privileged=True),
         )
 
         pipeline = pipelines.CdkPipeline(
             self,
-            "Pipeline",
+            "pipeline",
             cloud_assembly_artifact=cloud_assembly_artifact,
-            pipeline_name="WebinarPipeline",
+            pipeline_name="hello-pipeline",
             source_action=source_action,
             synth_action=synth_action,
         )
 
         pre_prod_app = WebServiceStage(
             self,
-            "Pre-Prod",
+            "preprod",
             env={
                 "account": config.account,
                 "region": config.region,
@@ -63,6 +74,8 @@ class PipelineStack(core.Stack):
         )
 
         pre_prod_stage = pipeline.add_application_stage(pre_prod_app)
+
+        pre_prod_stage.add_manual_approval_action(action_name='PromoteToProd')
 
         # pre_prod_stage.add_actions(
         #     pipelines.ShellScriptAction(
@@ -79,13 +92,8 @@ class PipelineStack(core.Stack):
         #     )
         # )
 
+        prod_app = WebServiceStage(self, "Prod", env={"account": config.account, "region": config.region, }, )
+
         pipeline.add_application_stage(
-            WebServiceStage(
-                self,
-                "Prod",
-                env={
-                    "account": config.account,
-                    "region": config.region,
-                },
-            )
+            prod_app
         )

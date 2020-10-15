@@ -18,17 +18,19 @@ class Config(BaseSettings):
     gh_repo: str = "cdk-hello-apigw-asgi"
 
 
-config = Config()
+if __name__ == "__main__":
 
-app = core.App()
+    config = Config()
 
-# HelloApigWsgiStack(app, "hello-apig-wsgi")
+    app = core.App()
 
-PipelineStack(
-    app,
-    "hello-apig-wsgi-pipeline",
-    config,
-    env={"account": config.account, "region": config.region},
-)
+    application_stack = HelloApigWsgiStack(app, "application")
 
-app.synth()
+    pipeline_stack = PipelineStack(
+        app,
+        "pipeline",
+        config,
+        env={"account": config.account, "region": config.region},
+    )
+
+    app.synth()
