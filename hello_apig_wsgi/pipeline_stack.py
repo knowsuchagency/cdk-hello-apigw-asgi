@@ -21,9 +21,9 @@ class WebServiceStage(core.Stage):
 
         self.graphql_api_key_output = service.graphql_api.api_key
 
-        self.foo = "bar"
+        self.foo_output = service.http_api.url
 
-        self.bar_output = "foo"
+        self.bar = service.http_api.url
 
 
 class PipelineStack(core.Stack):
