@@ -15,6 +15,8 @@ class WebServiceStage(core.Stage):
 
         service = HelloApigWsgiStack(self, "WebService")
 
+        # TODO: cleanup
+
         self.http_api_url_output = service.http_api.url
 
         self.graphql_url_output = service.graphql_api.graphql_url
