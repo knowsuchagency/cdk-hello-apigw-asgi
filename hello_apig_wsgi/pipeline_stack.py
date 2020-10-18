@@ -23,9 +23,6 @@ class WebServiceStage(core.Stage):
 
         self.graphql_api_key_output = service.graphql_api.api_key
 
-        self.foo_output = service.http_api.url
-
-        self.bar = service.http_api.url
 
 
 class PipelineStack(core.Stack):
@@ -52,7 +49,7 @@ class PipelineStack(core.Stack):
                 "npm install -g aws-cdk",
                 "pip install -r requirements.txt",
             ],
-            # test_commands=[],
+            test_commands=["pytest lambdas -v -m 'not integration'"],
             synth_command="cdk synth application",
             environment=codebuild.BuildEnvironment(privileged=True),
         )
@@ -77,25 +74,30 @@ class PipelineStack(core.Stack):
 
         pre_prod_stage = pipeline.add_application_stage(pre_prod_app)
 
-        pre_prod_stage.add_manual_approval_action(action_name='PromoteToProd')
-
-        # pre_prod_stage.add_actions(
-        #     pipelines.ShellScriptAction(
-        #         action_name="Integ",
-        #         run_order=pre_prod_stage.next_sequential_run_order(),
-        #         additional_artifacts=[source_artifact],
-        #         commands=[
-        #             "pip install -r requirements.txt",
-        #             "pytest integtests",
-        #         ],
-        #         use_outputs={
-        #             "SERVICE_URL": pipeline.stack_output(pre_prod_app.url_output)
-        #         },
-        #     )
-        # )
-
-        prod_app = WebServiceStage(self, "Prod", env={"account": config.account, "region": config.region, }, )
-
-        pipeline.add_application_stage(
-            prod_app
+        pre_prod_stage.add_actions(
+            pipelines.ShellScriptAction(
+                action_name="integration_tests",
+                run_order=pre_prod_stage.next_sequential_run_order(),
+                additional_artifacts=[source_artifact],
+                commands=[
+                    "pip install -r requirements.txt",
+                    "pytest lambdas -v -m integration",
+                ],
+                use_outputs={
+                    "http_api_url_output": pipeline.stack_output(pre_prod_app.http_api_url_output)
+                },
+            )
         )
+
+        pre_prod_stage.add_manual_approval_action(action_name="PromoteToProd")
+
+        prod_app = WebServiceStage(
+            self,
+            "Prod",
+            env={
+                "account": config.account,
+                "region": config.region,
+            },
+        )
+
+        pipeline.add_application_stage(prod_app)

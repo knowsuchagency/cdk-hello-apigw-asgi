@@ -35,6 +35,7 @@ setuptools.setup(
         "boto3",
         "pydantic",
         "pytest",
+        "requests",
     ],
     python_requires=">=3.6",
     classifiers=[
