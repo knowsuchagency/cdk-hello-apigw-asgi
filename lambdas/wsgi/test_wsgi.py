@@ -16,7 +16,7 @@ def client():
         yield client_
 
 
-def test_wsgi_functional(client):
+def test_wsgi_unit(client):
     resp = client.get("/wsgi")
     assert "path" in resp.json
 
