@@ -7,7 +7,7 @@ from index import app
 
 @pytest.fixture
 def url():
-    return os.environ["http_api_url_output"]
+    return os.environ["http_api_url"]
 
 
 @pytest.fixture()

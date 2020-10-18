@@ -13,16 +13,7 @@ class WebServiceStage(core.Stage):
     def __init__(self, scope: core.Construct, id: str, **kwargs):
         super().__init__(scope, id, **kwargs)
 
-        service = HelloApigWsgiStack(self, "WebService")
-
-        # TODO: cleanup
-
-        self.http_api_url_output = service.http_api.url
-
-        self.graphql_url_output = service.graphql_api.graphql_url
-
-        self.graphql_api_key_output = service.graphql_api.api_key
-
+        self.service = HelloApigWsgiStack(self, "WebService")
 
 
 class PipelineStack(core.Stack):
@@ -84,7 +75,9 @@ class PipelineStack(core.Stack):
                     "pytest lambdas -v -m integration",
                 ],
                 use_outputs={
-                    "http_api_url_output": pipeline.stack_output(pre_prod_app.http_api_url_output)
+                    "http_api_url": pipeline.stack_output(
+                        pre_prod_app.service.http_api_url
+                    )
                 },
             )
         )

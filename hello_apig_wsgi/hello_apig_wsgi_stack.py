@@ -48,7 +48,7 @@ class HelloApigWsgiStack(core.Stack):
             integration=wsgi_integration,
         )
 
-        core.CfnOutput(self, "RestApiUrl", value=self.http_api.url)
+        self.http_api_url = core.CfnOutput(self, "RestApiUrl", value=self.http_api.url)
 
         self.graphql_api = appsync.GraphqlApi(
             self,
