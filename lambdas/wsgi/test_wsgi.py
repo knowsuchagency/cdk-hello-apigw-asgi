@@ -23,5 +23,5 @@ def test_wsgi_functional(client):
 
 @pytest.mark.integration
 def test_wsgi_integration(url):
-    with requests.get("/wsgi") as resp:
+    with requests.get(f"{url}/wsgi") as resp:
         assert "path" in resp.json()
